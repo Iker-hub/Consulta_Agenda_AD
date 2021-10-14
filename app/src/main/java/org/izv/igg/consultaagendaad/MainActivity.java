@@ -145,7 +145,7 @@ public class MainActivity extends AppCompatActivity {
 
     private void search() {
         
-        tvResult.setText("a pelo ya sí");
+        tvResult.setText("");
         // Buscar entre contactos
         // ContentProvider Proveedor de contenidos
         // ContentResolver Consultor de contenidos
@@ -153,43 +153,12 @@ public class MainActivity extends AppCompatActivity {
         // url: https://ieszaidinvergeles.org/carpeta/carpeta2/pagina.html?dato=1
         // uri: protocolo://direccion/ruta/recurso
 
-        /*Cursor cursor = getContentResolver().query(
-                UserDictionary.Words.CONTENT_URI,
-                new String[]{"projection"},
-                "campo1 = ? and campo2 > ? or campo3 = ?",
-                new String[] {"pepe","4","23"},
-                "campo5, campo3, campo4");*/
-
-        /*
-        Uri uri = ContactsContract.Contacts.CONTENT_URI;
-        String proyeccion[] = new String[] {ContactsContract.Contacts.DISPLAY_NAME}; // Todos los campos
-        String seleccion = ContactsContract.Contacts.IN_VISIBLE_GROUP + " = ? and " +
-                ContactsContract.Contacts.HAS_PHONE_NUMBER + "= ?";
-        String argumentos[] = new String[]{"1","1"};
-        seleccion = null; // Sin where
-        argumentos = null; // Sin where
-        String orden = ContactsContract.Contacts.DISPLAY_NAME + " collate localized asc";
-        Cursor cursor = getContentResolver().query(uri, proyeccion, seleccion, argumentos, orden);
-        */
-
         Uri uri2 = ContactsContract.CommonDataKinds.Phone.CONTENT_URI;
         String proyeccion2[] = new String[]{ContactsContract.CommonDataKinds.Phone.NUMBER,
                                                ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME}; // Todos los campos
         String seleccion2 = ContactsContract.CommonDataKinds.Phone.NUMBER + " like ?";
-        String argumentos2[] = new String[]{/*"1%2%3"};*/etPhone.getText().toString()};
+        String argumentos2[] = new String[]{etPhone.getText().toString()+"%"};
         String orden2 = ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME;
-
-        /*
-        Uri uri2 = ContactsContract.CommonDataKinds.Phone.CONTENT_URI;
-        String proyeccion2[] = new String[]{ContactsContract.CommonDataKinds.Phone.NUMBER,
-                ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME};
-        String seleccion2 = ContactsContract.Data.MIMETYPE + "='" +
-                ContactsContract.CommonDataKinds.Phone.CONTENT_ITEM_TYPE + "' AND" +
-                ContactsContract.CommonDataKinds.Phone.NUMBER + " IS NOT NULL";
-        String argumentos2[] = new String[]{etPhone.getText().toString()};
-        String orden2 = ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME + " ASC";
-        */
-
 
         Cursor cursor2 = getContentResolver().query(uri2, proyeccion2, seleccion2, argumentos2, orden2);
 
@@ -203,13 +172,7 @@ public class MainActivity extends AppCompatActivity {
         while (cursor2.moveToNext()){
             nombre = cursor2.getString(columnaNombre);
             numero = cursor2.getString(columnaNumero);
-            //Log.v(TAG, nombre + ": " + numero);
-            for (String s : columnas2) {
-                int pos = cursor2.getColumnIndex(s);
-                String valor = cursor2.getString(pos);
-                Log.v(TAG, pos + " " + s + " " + valor);
-                tvResult.setText(valor);
-            }
+            tvResult.append("Contacto: " + nombre + " | " + " Número: " + numero + "\n");
         }
     }
 

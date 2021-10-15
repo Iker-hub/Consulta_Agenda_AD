@@ -5,18 +5,19 @@ import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
+import androidx.preference.PreferenceManager;
 
 import android.Manifest;
-import android.app.Dialog;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.provider.ContactsContract;
-import android.provider.UserDictionary;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -130,6 +131,12 @@ public class MainActivity extends AppCompatActivity {
         etPhone = findViewById(R.id.etPhone);
         tvResult = findViewById(R.id.tvResult);
 
+        SharedPreferences preferenciasActividad = getPreferences(Context.MODE_PRIVATE);
+        String lastSearch = preferenciasActividad.getString(getString(R.string.last_search),"");
+        if(!lastSearch.isEmpty()){
+            etPhone.setText(lastSearch);
+        }
+
         btSearch.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -144,8 +151,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void search() {
-        
-        tvResult.setText("");
+
         // Buscar entre contactos
         // ContentProvider Proveedor de contenidos
         // ContentResolver Consultor de contenidos
@@ -153,27 +159,53 @@ public class MainActivity extends AppCompatActivity {
         // url: https://ieszaidinvergeles.org/carpeta/carpeta2/pagina.html?dato=1
         // uri: protocolo://direccion/ruta/recurso
 
-        Uri uri2 = ContactsContract.CommonDataKinds.Phone.CONTENT_URI;
-        String proyeccion2[] = new String[]{ContactsContract.CommonDataKinds.Phone.NUMBER,
+        String phone = etPhone.getText().toString();
+
+        tvResult.setText("");
+
+        // Guardamos la última busqueda de contacto
+        SharedPreferences preferenciasActividad = getPreferences(Context.MODE_PRIVATE); // Preferencias compartidas de la actividad actual, coge el nombre de la actividad actual
+        SharedPreferences.Editor editor = preferenciasActividad.edit();
+        editor.putString(getString(R.string.last_search),phone);
+        editor.commit();
+
+        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this ); // SharedPreferences: Permite acceder a las preferencias compartidas de mi aplicación
+        String email = sharedPreferences.getString(getString(R.string.settings_email), getString(R.string.no_email)); // Así cogemos el String
+        tvResult.append(email + "\n");
+
+        phone = searchFormat(phone);
+
+        Uri uri = ContactsContract.CommonDataKinds.Phone.CONTENT_URI;
+        String proyeccion[] = new String[]{ContactsContract.CommonDataKinds.Phone.NUMBER,
                                                ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME}; // Todos los campos
-        String seleccion2 = ContactsContract.CommonDataKinds.Phone.NUMBER + " like ?";
-        String argumentos2[] = new String[]{etPhone.getText().toString()+"%"};
-        String orden2 = ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME;
+        String seleccion = ContactsContract.CommonDataKinds.Phone.NUMBER + " like ?";
+        String argumentos[] = new String[]{phone};
+        String orden = ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME;
 
-        Cursor cursor2 = getContentResolver().query(uri2, proyeccion2, seleccion2, argumentos2, orden2);
+        Cursor cursor = getContentResolver().query(uri, proyeccion, seleccion, argumentos, orden);
 
-        String[] columnas2 = cursor2.getColumnNames();
-        for (String s : columnas2) {
-            Log.v(TAG, s);
-        }
-        int columnaNombre = cursor2.getColumnIndex(ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME);
-        int columnaNumero = cursor2.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER);
+        String[] columnas = cursor.getColumnNames();
+        int columnaNombre = cursor.getColumnIndex(ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME);
+        int columnaNumero = cursor.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER);
         String nombre, numero;
-        while (cursor2.moveToNext()){
-            nombre = cursor2.getString(columnaNombre);
-            numero = cursor2.getString(columnaNumero);
-            tvResult.append("Contacto: " + nombre + " | " + " Número: " + numero + "\n");
+
+        while (cursor.moveToNext()){
+        nombre = cursor.getString(columnaNombre);
+        numero = cursor.getString(columnaNumero);
+            for (String s : columnas) {
+                int pos = cursor.getColumnIndex(s);
+                String valor = cursor.getString(pos);
+                tvResult.append(s + " " + valor + "\n");
+            }
         }
+    }
+
+    private String searchFormat(String phone) {
+        String newString = "";
+        for (char ch : phone.toCharArray()){
+            newString += ch + "%";
+        }
+        return newString;
     }
 
     private void searchIfPermitted() {

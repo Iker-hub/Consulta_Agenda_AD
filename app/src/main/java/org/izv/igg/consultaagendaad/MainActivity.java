@@ -123,7 +123,6 @@ public class MainActivity extends AppCompatActivity {
                          , getString(R.string.message)
                          , Manifest.permission.READ_CONTACTS
                          , CONTACTS_PERMISSION);
-        requestPermission();
     }
 
     private void initialize() {
@@ -134,7 +133,7 @@ public class MainActivity extends AppCompatActivity {
         SharedPreferences preferenciasActividad = getPreferences(Context.MODE_PRIVATE);
         String lastSearch = preferenciasActividad.getString(getString(R.string.last_search),"");
         if(!lastSearch.isEmpty()){
-            etPhone.setText(lastSearch);
+            etPhone.setText(lastSearch.replace("%",""));
         }
 
         btSearch.setOnClickListener(new View.OnClickListener() {
@@ -160,6 +159,7 @@ public class MainActivity extends AppCompatActivity {
         // uri: protocolo://direccion/ruta/recurso
 
         String phone = etPhone.getText().toString();
+        phone = searchFormat(phone);
 
         tvResult.setText("");
 
@@ -170,10 +170,6 @@ public class MainActivity extends AppCompatActivity {
         editor.commit();
 
         SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this ); // SharedPreferences: Permite acceder a las preferencias compartidas de mi aplicación
-        String email = sharedPreferences.getString(getString(R.string.settings_email), getString(R.string.no_email)); // Así cogemos el String
-        tvResult.append(email + "\n");
-
-        phone = searchFormat(phone);
 
         Uri uri = ContactsContract.CommonDataKinds.Phone.CONTENT_URI;
         String proyeccion[] = new String[]{ContactsContract.CommonDataKinds.Phone.NUMBER,
@@ -195,8 +191,16 @@ public class MainActivity extends AppCompatActivity {
             for (String s : columnas) {
                 int pos = cursor.getColumnIndex(s);
                 String valor = cursor.getString(pos);
+                if (s.equalsIgnoreCase("data1")){
+                    s = "Tlf: ";
+                }
+
+                if (s.equalsIgnoreCase("display_name")) {
+                    s = "Nombre: ";
+                }
                 tvResult.append(s + " " + valor + "\n");
             }
+            tvResult.append("\n");
         }
     }
 
